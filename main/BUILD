@@ -12,5 +12,8 @@ cc_library(
     name = "kv_store",
     srcs = ["kv_store.cc"],
     hdrs = ["kv_store.h"],
-    deps = ["@com_github_google_glog//:glog"],
+    deps = [
+        "@com_github_gflags_gflags//:gflags",
+        "@com_github_google_glog//:glog",
+    ],
 )
