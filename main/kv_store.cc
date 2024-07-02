@@ -1,34 +1,32 @@
-#include <iostream>
+#include <glog/logging.h>
 
 #include "main/kv_store.h"
-
-using std::cout;
-using std::endl;
 
 namespace kv_store {
 
 //------------------------------------------------------------------
 
 KVStore::KVStore() {
-    cout << "Creating KVStore. CPP version: " << __cplusplus << endl;
+    LOG(INFO) << "Creating KVStore.";
+    CHECK_EQ(__cplusplus, 202002L);
 }
 
 //------------------------------------------------------------------
 
 KVStore::~KVStore() {
-    cout << "Destroying KVStore" << endl;
+    LOG(INFO) << "Destroying KVStore";
 }
 
 //------------------------------------------------------------------
 
 void KVStore::Read(std::string key) {
-    cout << "Read " << key << endl;
+    LOG(INFO) << "Read " << key;
 }
 
 //------------------------------------------------------------------
 
 void KVStore::Write(std::string key) {
-    cout << "Write " << key << endl;
+    LOG(INFO) << "Write " << key;
 }
 
 //------------------------------------------------------------------
