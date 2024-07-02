@@ -5,18 +5,18 @@
 namespace kv_store {
 
 class KVStore {
-  public:
-    // Ctor.
-    KVStore();
-    
-    // Dtor.
-    ~KVStore();
+public:
+  // Ctor.
+  KVStore();
 
-    // API to read a key.
-    void Read(std::string key);
+  // Dtor.
+  ~KVStore();
 
-    // API to write a key.
-    void Write(std::string key);
+  // API to read a key.
+  void Read(std::string key);
+
+  // API to write a key.
+  void Write(std::string key);
 };
 
-}
+} // namespace kv_store
