@@ -3,6 +3,7 @@
 #include <filesystem>
 #include <glog/logging.h>
 
+using std::shared_ptr;
 using std::string;
 
 namespace kv_store {
@@ -18,6 +19,22 @@ RecordStore::RecordStore(const string &path)
 }
 
 //------------------------------------------------------------------
+
+RecordStore::RecordID RecordStore::Write(shared_ptr<RecordInterface> record) {
+  CHECK(record);
+  RecordID id;
+  return id;
+}
+
+//------------------------------------------------------------------
+
+shared_ptr<RecordInterface> RecordStore::Read(const RecordID record_id) {
+  CHECK_GE(record_id.file_num, 0);
+  CHECK_GE(record_id.offset, 0);
+
+  shared_ptr<RecordInterface> record;
+  return record;
+}
 
 //------------------------------------------------------------------
 
