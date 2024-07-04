@@ -13,7 +13,14 @@ cc_library(
     srcs = ["kv_store.cc"],
     hdrs = ["kv_store.h"],
     deps = [
+        ":constants",
+        "//main/record_store:record_store",
         "@com_github_gflags_gflags//:gflags",
         "@com_github_google_glog//:glog",
     ],
+)
+
+cc_library(
+    name = "constants",
+    hdrs = ["constants.h"],
 )

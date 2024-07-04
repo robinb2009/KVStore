@@ -1,20 +1,22 @@
+#include "main/kv_store.h"
+
+#include <filesystem>
 #include <gflags/gflags.h>
 #include <glog/logging.h>
 
-#include "main/kv_store.h"
-
-DEFINE_int32(kv_store_max_value_size_mb, 5,
-             "The maximium size of the value for each key-value pair to be "
-             "stored in the KVStore.");
+#include "main/constants.h"
 
 namespace kv_store {
 
 //------------------------------------------------------------------
 
-KVStore::KVStore() {
-  LOG(INFO) << "Creating KVStore. Max value size: "
-            << FLAGS_kv_store_max_value_size_mb;
+KVStore::KVStore(std::string path) : base_path_(path + '/' + kKVStoreDirName) {
   CHECK_EQ(__cplusplus, 202002L);
+
+  CHECK(std::filesystem::create_directory(base_path_));
+  record_store_ = make_shared<record::RecordStore>(base_path_);
+
+  LOG(INFO) << "Created KVStore";
 }
 
 //------------------------------------------------------------------
