@@ -23,5 +23,15 @@ bool Record::Deserialize(std::string data) {
 
 //------------------------------------------------------------------
 
+int Record::Size() const { return value_.size(); }
+
+//------------------------------------------------------------------
+
+bool Record::Compare(const Record &record) const {
+  return value_ == record.value();
+}
+
+//------------------------------------------------------------------
+
 } // namespace record
 } // namespace kv_store

@@ -7,7 +7,9 @@ cc_library(
     srcs = ["record_store.cc"],
     hdrs = ["record_store.h"],
     deps = [
-        ":record_interface",
+        ":record",
+        "//main/utils:file",
+        "@com_github_gflags_gflags//:gflags",
         "@com_github_google_glog//:glog",
     ],
 )

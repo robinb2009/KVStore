@@ -21,7 +21,11 @@ KVStore::KVStore(std::string path) : base_path_(path + '/' + kKVStoreDirName) {
 
 //------------------------------------------------------------------
 
-KVStore::~KVStore() { LOG(INFO) << "Destroying KVStore"; }
+KVStore::~KVStore() {
+  record_store_.reset();
+  std::filesystem::remove_all(base_path_);
+  LOG(INFO) << "Destroying KVStore";
+}
 
 //------------------------------------------------------------------
 

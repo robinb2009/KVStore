@@ -14,6 +14,9 @@ public:
 
   // Returns whether the deserialization succeeded.
   virtual bool Deserialize(std::string data) = 0;
+
+  // Get's the serialized size of the record.
+  virtual int Size() const = 0;
 };
 
 } // namespace record

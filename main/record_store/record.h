@@ -19,6 +19,13 @@ public:
 
   bool Deserialize(std::string data) override;
 
+  int Size() const override;
+
+  bool Compare(const Record &record) const;
+
+  // Accessors
+  std::string value() const { return value_; }
+
 private:
   // This record only contains a value string.
   std::string value_;
