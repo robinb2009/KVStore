@@ -12,3 +12,12 @@ cc_library(
         "@com_google_googletest//:gtest_main",
     ],
 )
+
+cc_library(
+    name = "file",
+    srcs = ["file.cc"],
+    hdrs = ["file.h"],
+    deps = [
+        "@com_github_google_glog//:glog",
+    ],
+)
