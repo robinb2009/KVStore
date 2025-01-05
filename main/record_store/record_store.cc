@@ -1,7 +1,6 @@
 #include "main/record_store/record_store.h"
 
 #include <filesystem>
-#include <gflags/gflags.h>
 #include <glog/logging.h>
 #include <mutex>
 
@@ -10,16 +9,6 @@
 using std::make_shared;
 using std::shared_ptr;
 using std::string;
-
-DEFINE_int32(record_store_max_records_per_file, 1000,
-             "Maximum allowed number of records that can be stored in a single "
-             "record file.");
-
-DEFINE_int32(record_store_max_file_size_mb, 10,
-             "Maximum allowed size (in mb) of a single record file.");
-
-DEFINE_int32(record_store_max_record_size_bytes, 1024 * 1024,
-             "Maximum allowed size (in mb) of a single record file.");
 
 namespace kv_store {
 namespace record {
@@ -44,120 +33,66 @@ uint32_t StrToSize(const string &str) {
 //------------------------------------------------------------------
 
 RecordStore::RecordStore(const string &path)
-    : base_path_(path + '/' + kRecordStoreDirName) {
+    : path_(path + "/" + kRecordFileName) {
   CHECK_EQ(__cplusplus, 202002L);
-  PCHECK(std::filesystem::create_directory(base_path_));
+  CHECK(!path.empty());
+
+  PCHECK(std::filesystem::exists(path));
+  PCHECK(std::filesystem::is_directory(path));
+
+  file_ = make_shared<utils::File>(path_);
+  CHECK(file_);
+
+  file_->Open();
+  size_.store(0);
+
   LOG(INFO) << "Created RecordStore";
 }
 
 //------------------------------------------------------------------
 
 RecordStore::~RecordStore() {
-  std::filesystem::remove_all(base_path_);
+  PCHECK(std::filesystem::remove(path_));
   LOG(INFO) << "Destroyed RecordStore";
 }
 
 //------------------------------------------------------------------
 
-RecordStore::RecordID RecordStore::Write(shared_ptr<RecordInterface> record) {
+int RecordStore::Write(shared_ptr<Record> record) {
   CHECK(record);
-  CHECK_LE(record->Size(), FLAGS_record_store_max_record_size_bytes);
+  const int record_size = record->Size();
+  CHECK_LE(record_size, kMaxRecordSize);
+  CHECK_GT(record_size, 0);
 
-  std::unique_lock ul(mutex_);
+  const int offset = size_.fetch_add(record_size + 4);
 
-  if (file_num_ == -1 ||
-      num_records_in_file_ >= FLAGS_record_store_max_records_per_file ||
-      size_bytes_ + record->Size() >
-          FLAGS_record_store_max_file_size_mb * 1024 * 1024) {
-    OpenNewRecordFile();
-  }
+  // Every write will write to a different range, so we don't need to worry
+  // about synchronisation here. We don't overwrite records.
+  const string size_str = SizeToStr(static_cast<uint32_t>(record_size));
+  CHECK_EQ(file_->Write(offset, size_str), 4);
+  CHECK_EQ(file_->Write(offset + 4, record->Serialize()), record_size);
 
-  RecordID id;
-  id.offset = size_bytes_;
-  id.file_num = file_num_;
+  LOG(INFO) << "Wrote record at offset " << offset << " of size "
+            << record_size;
 
-  LOG(INFO) << "Writing record " << id.ToString();
-
-  // Write the record.
-  string serialized_record = record->Serialize();
-  CHECK_EQ(file_->Write(id.offset, SizeToStr(serialized_record.size())), 4);
-  CHECK_EQ(file_->Write(id.offset + 4, serialized_record),
-           static_cast<int>(serialized_record.size()));
-
-  // Update the stats.
-  size_bytes_ += 4 + serialized_record.size();
-  num_records_in_file_++;
-
-  return id;
+  return offset;
 }
 
 //------------------------------------------------------------------
 
-shared_ptr<RecordInterface> RecordStore::Read(const RecordID record_id) {
-  CHECK_GE(record_id.file_num, 0);
-  CHECK_GE(record_id.offset, 0);
-  LOG(INFO) << "Reading record " << record_id.ToString();
+shared_ptr<Record> RecordStore::Read(const int offset) {
+  CHECK_LT(offset, size_.load());
+  const string size_str = file_->Read(offset, 4);
+  CHECK_EQ(size_str.size(), 4U);
 
-  shared_ptr<utils::File> file;
+  const int record_size = static_cast<int>(StrToSize(size_str));
+  CHECK_LE(record_size, kMaxRecordSize);
 
-  {
-    std::shared_lock sl(mutex_);
-    CHECK_LE(record_id.file_num, file_num_);
-    if (file_num_ == record_id.file_num) {
-      CHECK_GE(size_bytes_, record_id.offset);
-      file = file_;
-    }
-  }
-
-  // TODO: Use a cache of sorts so that we don't open too many fds for the
-  // same record file.
-  if (!file) {
-    file = make_shared<utils::File>(GetRecordFilePath(record_id.file_num));
-    file->Open();
-  }
-
-  // Read the record size.
-  const string sz_str = file->Read(record_id.offset, 4);
-  CHECK_EQ(sz_str.size(), 4U);
-  const int sz = StrToSize(sz_str);
-  CHECK_GT(sz, 0);
-  CHECK_LE(sz, FLAGS_record_store_max_record_size_bytes);
-
-  // Read the record.
-  const string record_str = file->Read(record_id.offset + 4, sz);
-  CHECK_EQ(record_str.size(), static_cast<size_t>(sz));
-
-  // TODO: Abstract this out. Maybe create a RecordFactory or something? See
-  // design patterns.
+  string data = file_->Read(offset + 4, record_size);
   auto record = make_shared<Record>();
-  CHECK(record->Deserialize(move(record_str)));
+  record->Deserialize(data);
+
   return record;
-}
-
-//------------------------------------------------------------------
-//                           Helper Methods
-//------------------------------------------------------------------
-
-void RecordStore::OpenNewRecordFile() {
-  // Ensure that the mutex is exclusively locked.
-  CHECK(!mutex_.try_lock_shared());
-
-  // Deleting file_ will close the file.
-  file_.reset();
-
-  file_num_++;
-  num_records_in_file_ = 0;
-  size_bytes_ = 0;
-
-  LOG(INFO) << "Opening a new record file " << file_num_;
-  file_ = make_shared<utils::File>(GetRecordFilePath(file_num_));
-  file_->Open();
-}
-
-//------------------------------------------------------------------
-
-string RecordStore::GetRecordFilePath(int file_num) {
-  return base_path_ + '/' + kRecordFileNamePrefix + std::to_string(file_num);
 }
 
 //------------------------------------------------------------------

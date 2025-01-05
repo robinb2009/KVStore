@@ -8,28 +8,22 @@ namespace record {
 
 //------------------------------------------------------------------
 
-Record::Record(std::string value) : value_(move(value)) {}
+Record::Record(std::string data) : data_(move(data)) {}
 
 //------------------------------------------------------------------
 
-string Record::Serialize() const { return value_; }
+string Record::Serialize() const { return data_; }
 
 //------------------------------------------------------------------
 
 bool Record::Deserialize(std::string data) {
-  value_ = move(data);
+  data_ = move(data);
   return true;
 }
 
 //------------------------------------------------------------------
 
-int Record::Size() const { return value_.size(); }
-
-//------------------------------------------------------------------
-
-bool Record::Compare(const Record &record) const {
-  return value_ == record.value();
-}
+int Record::Size() const { return data_.size(); }
 
 //------------------------------------------------------------------
 

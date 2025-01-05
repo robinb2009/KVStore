@@ -1,34 +1,32 @@
 #pragma once
 
-#include "main/record_store/record_interface.h"
+// Class that defines a record and how it is stored.
+//
+// TODO: Add checksum support.
 
-// Record class that defines a simple string record. We don't really need this
-// class, but it helps abstract out functionality for the record. We can also
-// add more functionality (like checksums, additional fields) here without
-// modifying RecordStore implementation.
+#include <string>
 
 namespace kv_store {
 namespace record {
 
-class Record : public RecordInterface {
+class Record {
 public:
   explicit Record(std::string value);
   Record() = default;
+  ~Record() = default;
 
-  std::string Serialize() const override;
+  std::string Serialize() const;
 
-  bool Deserialize(std::string data) override;
+  bool Deserialize(std::string data);
 
-  int Size() const override;
-
-  bool Compare(const Record &record) const;
+  int Size() const;
 
   // Accessors
-  std::string value() const { return value_; }
+  const std::string &data() const { return data_; }
 
 private:
   // This record only contains a value string.
-  std::string value_;
+  std::string data_;
 };
 
 } // namespace record

@@ -41,7 +41,7 @@ string File::Read(int offset, int size) {
   PCHECK(num_bytes_read >= 0);
 
   if (num_bytes_read != size) {
-    LOG(INFO) << "File::Read read partial bytes " << num_bytes_read
+    LOG(INFO) << "Partial bytes read: " << num_bytes_read
               << ", requested: " << size;
   }
 
