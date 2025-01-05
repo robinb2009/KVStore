@@ -25,7 +25,6 @@ protected:
 TEST_F(BPlusTreeTest, BasicTest) {
   b_tree_->Read("Hello");
   b_tree_->Write("Hello", "Hi");
-  b_tree_->Scan("Hello", 5);
 }
 
 //------------------------------------------------------------------

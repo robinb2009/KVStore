@@ -40,14 +40,5 @@ void BPlusTree::Write(string key, string value) {
 
 //------------------------------------------------------------------
 
-StorageEngineInterface::ScanResult BPlusTree::Scan(string start_key,
-                                                   int num_keys) {
-  LOG(INFO) << "BPlusTree::Scan " << start_key << " " << num_keys;
-  ScanResult res;
-  return res;
-}
-
-//------------------------------------------------------------------
-
 } // namespace storage_engine
 } // namespace kv_store

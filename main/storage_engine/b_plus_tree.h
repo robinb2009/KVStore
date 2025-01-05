@@ -22,9 +22,6 @@ public:
 
   void Write(std::string key, std::string value) override;
 
-  // Scans and returns only the keys.
-  ScanResult Scan(std::string start_key, int num_keys) override;
-
 private:
   const std::string base_path_;
 };

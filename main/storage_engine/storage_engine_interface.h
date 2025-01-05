@@ -20,9 +20,6 @@ public:
     // Whether all keys have been returned.
     bool eof;
   };
-
-  // Scans and returns only the keys.
-  virtual ScanResult Scan(std::string start_key, int num_keys) = 0;
 };
 
 } // namespace storage_engine
